@@ -5,6 +5,7 @@ import { Button } from "@heroui/react/button";
 import Logo from "./components/ui/Logo";
 import { Navbar } from "./components/ui/navbar/Navbar";
 import { Heart, Search } from "lucide-react";
+import { microgramma } from "./font";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +42,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${michroma.variable} ${orbitron.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${michroma.variable} ${orbitron.variable} ${microgramma.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
         <Navbar

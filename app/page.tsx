@@ -1,3 +1,13 @@
+import FeatureBar from "./components/FeatureBar";
+import Hero from "./components/hero/hero";
+
 export default function Home() {
-  return <div></div>;
+  return (
+    <>
+      <header>
+        <Hero></Hero>
+        <FeatureBar></FeatureBar>
+      </header>
+    </>
+  );
 }

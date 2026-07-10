@@ -2,7 +2,7 @@ const Logo = () => {
   return (
     <div className="flex items-center">
       <h1
-        className={`font-michroma text-4xl uppercase flex items-end font-black gap-1`}
+        className={` font-microgramma text-4xl uppercase flex items-end font-black gap-1 tracking-wider`}
       >
         <span className="text-white mb-4">ZELONI</span>
 
