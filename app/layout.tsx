@@ -1,10 +1,26 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Michroma, Orbitron } from "next/font/google";
 import "./globals.css";
+import { Button } from "@heroui/react/button";
+import Logo from "./components/ui/Logo";
+import { Navbar } from "./components/ui/navbar/Navbar";
+import { Heart, Search } from "lucide-react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+});
+
+export const michroma = Michroma({
+  variable: "--font-michroma",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+export const orbitron = Orbitron({
+  variable: "--font-orbitron",
+  subsets: ["latin"],
+  weight: "400",
 });
 
 const geistMono = Geist_Mono({
@@ -25,9 +41,36 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${michroma.variable} ${orbitron.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Navbar
+          brand={
+            <>
+              <Logo />
+            </>
+          }
+          items={[
+            { label: "Home", href: "/" },
+            { label: "Inventory", href: "/inventory", isActive: true },
+            { label: "Brand", href: "/brand" },
+            { label: "Services", href: "/services" },
+            { label: "About Us", href: "/about" },
+            { label: "Blog", href: "/blog" },
+            { label: "Contact", href: "/contact" },
+          ]}
+          rightContent={
+            <>
+              <Search />
+              <Heart />
+              <Button className="rounded-md bg-primary hover:bg-primary-hover">
+                Book a Test Drive
+              </Button>
+            </>
+          }
+        />
+        {children}
+      </body>
     </html>
   );
 }
