@@ -80,13 +80,13 @@ const stats = [
 
 export default function CategorySection() {
   return (
-    <section className="bg-[#060B15] py-24">
-      <div className="mx-auto max-w-384 px-5">
+    <section className="bg-[#060B15] py-12">
+      <div className="mx-auto max-w-384 px-6">
         {/* Heading */}
 
         <div className="mb-10 flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[4px] text-gray-500">
+            <p className="text-xs uppercase tracking-[4px] text-muted">
               Browse By Category
             </p>
 

@@ -1,5 +1,6 @@
 import CategorySection from "./components/CategorySection";
 import FeatureBar from "./components/FeatureBar";
+import FeaturedVehicles from "./components/FeaturedVehicles";
 import Hero from "./components/hero/hero";
 
 export default function Home() {
@@ -11,6 +12,7 @@ export default function Home() {
       </header>
       <main>
         <CategorySection></CategorySection>
+        <FeaturedVehicles></FeaturedVehicles>
       </main>
     </>
   );
