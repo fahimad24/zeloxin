@@ -2,7 +2,7 @@
 @import "@heroui/styles";
 
 :root {
-  --background: #0b1220;
+  --background: #060b15;
   --surface: #0e131f;
   --card: #08101f;
   --primary: #dc2626;
@@ -33,13 +33,6 @@
   --font-michroma: var(--font-michroma);
   --font-microgramma: var(--font-microgramma);
   --width-8xl: 96rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {

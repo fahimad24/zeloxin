@@ -2,6 +2,7 @@ import CategorySection from "./components/CategorySection";
 import FeatureBar from "./components/FeatureBar";
 import FeaturedVehicles from "./components/FeaturedVehicles";
 import Hero from "./components/hero/hero";
+import OurServices from "./components/OurServices";
 
 export default function Home() {
   return (
@@ -13,6 +14,7 @@ export default function Home() {
       <main>
         <CategorySection></CategorySection>
         <FeaturedVehicles></FeaturedVehicles>
+        <OurServices></OurServices>
       </main>
     </>
   );
