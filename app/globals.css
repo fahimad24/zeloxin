@@ -67,3 +67,17 @@ body {
   background: #dc2626;
   border-radius: 999px;
 }
+
+.t-pagination .swiper-pagination-bullet {
+  width: 24px;
+  height: 8px;
+  background: #64748b;
+  opacity: 1;
+  border-radius: 999px;
+  transition: all 0.3s ease;
+}
+
+.t-pagination .swiper-pagination-bullet-active {
+  background: #dc2626;
+  border-radius: 999px;
+}
