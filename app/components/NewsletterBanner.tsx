@@ -11,17 +11,17 @@ export default function NewsletterBanner() {
   };
 
   return (
-    <section className="w-full bg-[#0b0f19] py-12 px-6">
+    <section className="w-full bg-background py-12 px-6">
       <div className="max-w-384 mx-auto">
         <div className="relative w-full rounded-xl overflow-hidden border border-red-950/40 bg-linear-to-r from-primary/25 via-[#0f0a12] to-[#0a0505] min-h-65 md:min-h-55 flex items-center shadow-2xl">
-          <div className="absolute right-0 top-0 h-full w-full md:w-3/5 lg:w-1/2 select-none pointer-events-none mix-blend-lighten md:mix-blend-normal">
+          <div className="absolute inset-0 h-full w-full select-none pointer-events-none mix-blend-lighten md:mix-blend-normal">
             <div className="absolute inset-0 bg-linear-to-r from-[#120707] via-[#120707]/60 to-transparent z-10 hidden md:block" />
             <div className="absolute inset-0 bg-linear-to-l from-primary-30 via-transparent to-transparent z-10 block md:hidden" />
             <Image
               src="/images/banner-4.png"
               alt="Luxury Sports Car Background"
               fill
-              className="w-full h-full object-cover object-center"
+              className="object-cover object-bottom-10"
             />
           </div>
 

@@ -95,9 +95,9 @@ export function Navbar({
               <Link
                 href={item.href}
                 className={clsx(
+                  "hover:text-primary-hover text-text transition-colors duration-200",
                   pathname === item.href &&
-                    "font-medium text-primary underline underline-offset-8",
-                  "hover:text-primary-hover transition-colors duration-200",
+                    "font-medium text-primary! underline underline-offset-8",
                 )}
                 aria-current={pathname === item.href ? "page" : undefined}
               >
@@ -120,7 +120,7 @@ export function Navbar({
                 <Link
                   href={item.href}
                   className={clsx(
-                    "block py-2",
+                    "block py-2 text-muted",
                     pathname === item.href &&
                       "font-medium text-primary underline underline-offset-8",
                   )}

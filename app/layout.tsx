@@ -6,6 +6,8 @@ import Logo from "./components/ui/Logo";
 import { Navbar } from "./components/ui/navbar/Navbar";
 import { Heart, Search } from "lucide-react";
 import { microgramma } from "./font";
+import Footer from "./components/Footer";
+import Link from "next/link";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -62,8 +64,14 @@ export default function RootLayout({
           ]}
           rightContent={
             <>
-              <Search />
-              <Heart />
+              <Search className="text-text hover:text-primary transition-all duration-200 cursor-pointer" />
+              <Heart className="text-text hover:text-primary transition-all duration-200 cursor-pointer" />
+              <Link
+                href="/auth/login"
+                className="rounded-md text-text py-1.5 px-3 bg-background border border-border hover:border-primary hover:text-muted transition-all duration-200"
+              >
+                Login
+              </Link>
               <Button className="rounded-md bg-primary hover:bg-primary-hover">
                 Book a Test Drive
               </Button>
@@ -71,6 +79,7 @@ export default function RootLayout({
           }
         />
         {children}
+        <Footer></Footer>
       </body>
     </html>
   );
