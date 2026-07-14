@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, type FormEvent } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@heroui/react";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { FaGoogle, FaApple, FaFacebookF } from "react-icons/fa6";
+import { signUp } from "@/lib/auth-client";
 
 export default function SignUpPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -21,7 +22,7 @@ export default function SignUpPage() {
   const [passwordValue, setPasswordValue] = useState("");
   const [agreeTerms, setAgreeTerms] = useState(false);
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!agreeTerms) {
       alert("Please agree to the Terms & Conditions");
@@ -29,14 +30,21 @@ export default function SignUpPage() {
     }
 
     const formData = new FormData(e.currentTarget);
-    const data: Record<string, string> = {};
-    formData.forEach((value, key) => {
-      data[key] = value.toString();
+    const userData = Object.fromEntries(formData.entries());
+    userData["agreeTerms"] = agreeTerms ? "true" : "false";
+
+    const { error } = await signUp.email({
+      name: userData.name as string, // required
+      email: userData.email as string, // required
+      password: userData.password as string, // required
+      callbackURL: "http://localhost:3000/callback",
     });
 
-    data["agreeTerms"] = agreeTerms ? "true" : "false";
+    if (error) {
+      console.error("Sign up failed:", error);
+    }
 
-    alert(JSON.stringify(data, null, 2));
+    console.log(userData);
   };
 
   return (
@@ -70,7 +78,7 @@ export default function SignUpPage() {
               {/* Full Name Field */}
               <TextField
                 isRequired
-                name="fullName"
+                name="name"
                 type="text"
                 className="flex flex-col gap-1.5"
                 validate={(value) => {
