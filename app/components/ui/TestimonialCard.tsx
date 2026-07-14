@@ -4,7 +4,7 @@ import { Testimonial } from "../Testimonials";
 
 export default function TestimonialCard({ t }: { t: Testimonial }) {
   return (
-    <div className="relative rounded-xl border flex flex-col border-white/10 bg-card p-4">
+    <div className="relative rounded-xl border flex flex-col border-border hover:border-primary/60 bg-card p-4">
       <Quote className="absolute right-5 top-5 h-6 w-6 fill-red-600 text-red-600" />
       <div className="flex items-start gap-2 flex-1">
         <div className="relative h-11 w-11 shrink-0">
