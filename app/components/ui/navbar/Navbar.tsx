@@ -4,6 +4,9 @@ import { useState, ReactNode } from "react";
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Profile } from "../Profile";
+import { Skeleton } from "@heroui/react";
+import { useUserInfo } from "@/lib/userInfo";
 
 interface NavbarItem {
   label: string;
@@ -39,6 +42,8 @@ export function Navbar({
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+
+  const { session, isPending } = useUserInfo();
 
   return (
     <nav
@@ -106,9 +111,20 @@ export function Navbar({
             </li>
           ))}
         </ul>
+
         {rightContent && (
-          <div className="hidden items-center gap-5 md:flex">
-            {rightContent}
+          <div className="hidden items-center justify-end gap-4 md:flex ">
+            {isPending ? (
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 shrink-0 rounded-full bg-card" />
+              </div>
+            ) : session ? (
+              <div className="flex items-center gap-3">
+                <Profile session={session} />
+              </div>
+            ) : (
+              rightContent
+            )}
           </div>
         )}
       </header>

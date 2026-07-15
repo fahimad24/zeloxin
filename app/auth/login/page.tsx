@@ -11,25 +11,35 @@ import {
   FieldError,
   Checkbox,
   Button,
+  toast,
 } from "@heroui/react";
 import { FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { FaGoogle, FaApple, FaFacebookF } from "react-icons/fa6";
+import { signIn } from "@/lib/auth-client";
 
 export default function SignInPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const data: Record<string, string> = {};
-    formData.forEach((value, key) => {
-      data[key] = value.toString();
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    const { data, error } = await signIn.email({
+      email,
+      password,
+      rememberMe,
+      callbackURL: "/",
     });
 
-    data["rememberMe"] = rememberMe ? "true" : "false";
-
-    alert(JSON.stringify(data, null, 2));
+    if (data) {
+      toast.success("Login successful");
+      console.log("success login");
+    } else if (error) {
+      toast.warning(error.message || "Login failed");
+    }
   };
 
   return (

@@ -8,6 +8,7 @@ import { Heart, Search } from "lucide-react";
 import { microgramma } from "./font";
 import Footer from "./components/Footer";
 import Link from "next/link";
+import { Toast } from "@heroui/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,6 +81,7 @@ export default function RootLayout({
         />
         {children}
         <Footer></Footer>
+        <Toast.Provider placement="top end" />
       </body>
     </html>
   );

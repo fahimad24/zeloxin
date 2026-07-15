@@ -11,12 +11,15 @@ import {
   FieldError,
   Checkbox,
   Button,
+  toast,
 } from "@heroui/react";
 import { FiUser, FiMail, FiLock, FiEye, FiEyeOff } from "react-icons/fi";
 import { FaGoogle, FaApple, FaFacebookF } from "react-icons/fa6";
-import { signUp } from "@/lib/auth-client";
+import { signOut, signUp } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function SignUpPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [passwordValue, setPasswordValue] = useState("");
@@ -33,18 +36,20 @@ export default function SignUpPage() {
     const userData = Object.fromEntries(formData.entries());
     userData["agreeTerms"] = agreeTerms ? "true" : "false";
 
-    const { error } = await signUp.email({
+    const { data, error } = await signUp.email({
       name: userData.name as string, // required
       email: userData.email as string, // required
       password: userData.password as string, // required
       callbackURL: "http://localhost:3000/callback",
     });
 
-    if (error) {
-      console.error("Sign up failed:", error);
+    if (data) {
+      await signOut();
+      toast.success("Successfuly singUp...");
+      router.push("/auth/login");
+    } else {
+      toast.warning(error?.message || "Sign Up failed");
     }
-
-    console.log(userData);
   };
 
   return (
