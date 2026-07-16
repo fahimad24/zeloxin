@@ -1,4 +1,17 @@
+"use server";
+import { headers } from "next/headers";
+import { auth } from "./auth";
 import { ICar } from "./type";
+
+export const getSession = async () => {
+    const result = await auth.api.getSession({
+        headers: await headers()
+    })
+    const session = result?.session;
+    const { userId, token } = session || {};
+    return { userId, token, session };
+
+}
 
 const API_BASE_URL: string = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5000';
 
