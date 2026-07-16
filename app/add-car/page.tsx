@@ -10,6 +10,7 @@ import {
   FieldError,
   Checkbox,
   Button,
+  toast,
 } from "@heroui/react";
 import {
   FiChevronDown,
@@ -23,8 +24,13 @@ import {
   FiSend,
   FiX,
 } from "react-icons/fi";
+import { useUserInfo } from "@/lib/userInfo";
+import { addNewCar } from "@/lib/api-action";
+import { ICar } from "@/lib/type";
+import { uploadMultipleImages } from "@/lib/imageUploadApi";
 
 export default function AddNewCarPage() {
+  const { session } = useUserInfo();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<File[]>([]);
@@ -43,8 +49,12 @@ export default function AddNewCarPage() {
     "Traction Control": false,
   });
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!images.length) {
+      toast.warning("Please upload a transport image before submitting.");
+      return;
+    }
     const formData = new FormData(e.currentTarget);
 
     const title = (formData.get("carTitle") as string) || "";
@@ -58,6 +68,7 @@ export default function AddNewCarPage() {
     const year = Number(formData.get("year")) || new Date().getFullYear();
     const bodyType = (formData.get("bodyType") as string) || "";
     const condition = (formData.get("condition") as string) || "";
+    const location = (formData.get("location") as string) || "";
 
     const price = Number(formData.get("price")) || 0;
     const discountPriceVal = formData.get("discountPrice")
@@ -91,7 +102,7 @@ export default function AddNewCarPage() {
           .filter(Boolean)
       : [];
 
-    const imgNames = images.map((file) => file.name);
+    const imageUploadUrl = await uploadMultipleImages(images);
 
     const mongoDbPayload = {
       title,
@@ -126,16 +137,16 @@ export default function AddNewCarPage() {
       features: selectedFeatures,
       otherFeatures,
       description,
+      location,
       images: {
-        thumbnail: imgNames[0] || "",
-        cover: imgNames[0] || "",
-        gallery: imgNames,
+        thumbnail: imageUploadUrl[0] || "",
+        cover: imageUploadUrl[0] || "",
+        gallery: imageUploadUrl,
       },
       seller: {
-        userId: "",
-        name: "",
-        email: "",
-        phone: "",
+        userId: session?.id || null,
+        name: session?.name || "",
+        email: session?.email || "",
       },
       seo: {
         metaTitle: `${title} | For Sale`,
@@ -151,7 +162,9 @@ export default function AddNewCarPage() {
       isFeatured: false,
       isVerified: false,
       isSold: false,
-      createdBy: "",
+      rating: 0,
+      reviews: 0,
+      createdBy: session?.name || null,
       updatedBy: "",
       createdAt: {
         $date: new Date().toISOString(),
@@ -161,7 +174,16 @@ export default function AddNewCarPage() {
       },
     };
 
-    console.log("MongoDB Payload:", JSON.stringify(mongoDbPayload, null, 2));
+    if (imageUploadUrl.length > 0) {
+      const result = await addNewCar(mongoDbPayload as ICar);
+
+      if ((result as { acknowledged?: boolean })?.acknowledged === true) {
+        toast.success("Car added successfully!");
+        console.log("Car added successfully:", result);
+      } else {
+        console.error("Failed to add car:", result);
+      }
+    }
   };
 
   const handleFeatureChange = (feature: string, checked: boolean) => {
@@ -219,7 +241,7 @@ export default function AddNewCarPage() {
               <span className="text-muted">/</span>
               <span className="text-primary">Add New Car</span>
             </nav>
-            <h1 className="text-2xl sm:text-5xl font-bold text-white tracking-tight mb-2">
+            <h1 className="text-2xl sm:text-5xl font-bold text-text tracking-tight mb-2">
               Add New Car
             </h1>
             <p className="text-muted text-xs sm:text-sm max-w-xl leading-relaxed">
@@ -229,12 +251,12 @@ export default function AddNewCarPage() {
         </div>
 
         <Form className="space-y-8" onSubmit={onSubmit}>
-          <div className="bg-[#0b0f19]/40 border border-gray-800/50 rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
+          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-950/40 border border-red-900/40 text-red-500 shadow-inner">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/20 border border-primary/40 text-primary shadow-inner">
                 <FiCpu className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-extrabold text-white tracking-wide">
+              <h2 className="text-lg font-extrabold text-text tracking-wide">
                 Basic Information
               </h2>
             </div>
@@ -251,10 +273,10 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. Lamborghini Aventador SVJ"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
-                <FieldError className="text-xs text-red-500 mt-1" />
+                <FieldError className="text-xs text-primary mt-1" />
               </TextField>
 
               <TextField name="brand" className="flex flex-col gap-1.5">
@@ -266,7 +288,7 @@ export default function AddNewCarPage() {
                     required
                     name="brand"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Brand
@@ -294,10 +316,10 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. Aventador SVJ"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
-                <FieldError className="text-xs text-red-500 mt-1" />
+                <FieldError className="text-xs text-primary mt-1" />
               </TextField>
 
               <TextField name="year" className="flex flex-col gap-1.5">
@@ -309,7 +331,7 @@ export default function AddNewCarPage() {
                     required
                     name="year"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Year
@@ -335,7 +357,7 @@ export default function AddNewCarPage() {
                     required
                     name="bodyType"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Body Type
@@ -361,7 +383,7 @@ export default function AddNewCarPage() {
                     required
                     name="condition"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Condition
@@ -375,15 +397,31 @@ export default function AddNewCarPage() {
                   </span>
                 </div>
               </TextField>
+              <TextField
+                isRequired
+                name="location"
+                className="flex flex-col gap-1.5 col-span-3"
+              >
+                <Label className="text-xs font-semibold text-gray-300 tracking-wide">
+                  Location
+                </Label>
+                <div className="relative w-full">
+                  <Input
+                    placeholder="e.g. Los Angeles, CA"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
+                  />
+                </div>
+                <FieldError className="text-xs text-primary mt-1" />
+              </TextField>
             </div>
           </div>
 
-          <div className="bg-[#0b0f19]/40 border border-gray-800/50 rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
+          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-950/40 border border-red-900/40 text-red-500 shadow-inner">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/20 border border-primary/40 text-primary shadow-inner">
                 <FiDollarSign className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-extrabold text-white tracking-wide">
+              <h2 className="text-lg font-extrabold text-text tracking-wide">
                 Pricing & Availability
               </h2>
             </div>
@@ -400,10 +438,10 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. $450,000"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
-                <FieldError className="text-xs text-red-500 mt-1" />
+                <FieldError className="text-xs text-primary mt-1" />
               </TextField>
 
               <TextField name="discountPrice" className="flex flex-col gap-1.5">
@@ -413,7 +451,7 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. $425,000 (optional)"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
               </TextField>
@@ -427,7 +465,7 @@ export default function AddNewCarPage() {
                     required
                     name="availability"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Availability
@@ -453,10 +491,10 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. 12,500"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
                   />
                 </div>
-                <FieldError className="text-xs text-red-500 mt-1" />
+                <FieldError className="text-xs text-primary mt-1" />
               </TextField>
 
               <TextField name="fuelType" className="flex flex-col gap-1.5">
@@ -468,7 +506,7 @@ export default function AddNewCarPage() {
                     required
                     name="fuelType"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Fuel Type
@@ -493,7 +531,7 @@ export default function AddNewCarPage() {
                     required
                     name="transmission"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Transmission
@@ -516,7 +554,7 @@ export default function AddNewCarPage() {
                   <select
                     name="driveType"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Drive Type
@@ -539,7 +577,7 @@ export default function AddNewCarPage() {
                   <select
                     name="doors"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Doors
@@ -561,7 +599,7 @@ export default function AddNewCarPage() {
                   <select
                     name="seats"
                     defaultValue=""
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-muted focus:text-text focus:outline-none focus:border-primary/60 appearance-none transition duration-200"
                   >
                     <option value="" disabled hidden>
                       Select Seats
@@ -578,12 +616,12 @@ export default function AddNewCarPage() {
             </div>
           </div>
 
-          <div className="bg-[#0b0f19]/40 border border-gray-800/50 rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
+          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-950/40 border border-red-900/40 text-red-500 shadow-inner">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/20 border border-primary/40 text-primary shadow-inner">
                 <FiZap className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-extrabold text-white tracking-wide">
+              <h2 className="text-lg font-extrabold text-text tracking-wide">
                 Engine & Performance
               </h2>
             </div>
@@ -596,7 +634,7 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. V12"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
               </TextField>
@@ -611,7 +649,7 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. 6.5L"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
               </TextField>
@@ -623,7 +661,7 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. 770 hp"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
               </TextField>
@@ -635,7 +673,7 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. 720 Nm"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
               </TextField>
@@ -647,7 +685,7 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. 350 km/h"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
               </TextField>
@@ -659,19 +697,19 @@ export default function AddNewCarPage() {
                 <div className="relative w-full">
                   <Input
                     placeholder="e.g. 2.8 sec"
-                    className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                   />
                 </div>
               </TextField>
             </div>
           </div>
 
-          <div className="bg-[#0b0f19]/40 border border-gray-800/50 rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
+          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-950/40 border border-red-900/40 text-red-500 shadow-inner">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/20 border border-primary/40 text-primary shadow-inner">
                 <FiCheckSquare className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-extrabold text-white tracking-wide">
+              <h2 className="text-lg font-extrabold text-text tracking-wide">
                 Car Features
               </h2>
             </div>
@@ -690,8 +728,8 @@ export default function AddNewCarPage() {
                     }
                   >
                     <Checkbox.Content>
-                      <Checkbox.Control className="border-gray-800 data-[selected=true]:bg-primary data-[selected=true]:border-primary">
-                        <Checkbox.Indicator />
+                      <Checkbox.Control>
+                        <Checkbox.Indicator className="border-gray-800 data-[selected=true]:bg-primary data-[selected=true]:border-primary" />
                       </Checkbox.Control>
                       <span className="text-xs font-semibold text-gray-300 ml-2">
                         {feature}
@@ -712,18 +750,18 @@ export default function AddNewCarPage() {
               <div className="relative w-full">
                 <Input
                   placeholder="Add any additional features..."
-                  className="w-full bg-[#080c14]/90 border border-gray-800/80 rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 transition duration-200"
+                  className="w-full bg-background border border-border rounded-lg px-4 py-3 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 transition duration-200"
                 />
               </div>
             </TextField>
           </div>
 
-          <div className="bg-[#0b0f19]/40 border border-gray-800/50 rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
+          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-950/40 border border-red-900/40 text-red-500 shadow-inner">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/20 border border-primary/40 text-primary shadow-inner">
                 <FiFileText className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-extrabold text-white tracking-wide">
+              <h2 className="text-lg font-extrabold text-text tracking-wide">
                 Description
               </h2>
             </div>
@@ -735,7 +773,7 @@ export default function AddNewCarPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Write a detailed description about the car..."
-                className="w-full h-40 bg-[#080c14]/90 border border-gray-800/80 rounded-xl p-4 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:border-primary/60 resize-none transition duration-200"
+                className="w-full h-40 bg-background border border-border rounded-xl p-4 text-xs sm:text-sm text-text placeholder-muted focus:outline-none focus:ring-primary/60 resize-none transition duration-200"
               />
               <span className="absolute bottom-4 right-4 text-[10px] sm:text-xs font-bold text-muted">
                 {description.length} / 1000
@@ -743,12 +781,12 @@ export default function AddNewCarPage() {
             </div>
           </div>
 
-          <div className="bg-[#0b0f19]/40 border border-gray-800/50 rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
+          <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 backdrop-blur-xl space-y-6 shadow-xl">
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-950/40 border border-red-900/40 text-red-500 shadow-inner">
+              <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-primary/20 border border-primary/40 text-primary shadow-inner">
                 <FiImage className="w-5 h-5" />
               </div>
-              <h2 className="text-lg font-extrabold text-white tracking-wide">
+              <h2 className="text-lg font-extrabold text-text tracking-wide">
                 Images
               </h2>
             </div>
@@ -757,7 +795,7 @@ export default function AddNewCarPage() {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-gray-800/80 hover:border-red-600/40 rounded-2xl p-10 flex flex-col items-center justify-center gap-3 cursor-pointer bg-[#080c14]/30 hover:bg-[#080c14]/60 transition duration-200"
+              className="border-2 border-dashed border-border hover:border-red-600/40 rounded-2xl p-10 flex flex-col items-center justify-center gap-3 cursor-pointer bg-[#080c14]/30 hover:bg-[#080c14]/60 transition duration-200"
             >
               <input
                 type="file"
@@ -803,7 +841,7 @@ export default function AddNewCarPage() {
                         e.stopPropagation();
                         removeImage(index);
                       }}
-                      className="absolute top-2 right-2 bg-black/70 hover:bg-red-600 text-white p-1 rounded-lg text-xs transition duration-200"
+                      className="absolute top-2 right-2 bg-black/70 hover:bg-red-600 text-text p-1 rounded-lg text-xs transition duration-200"
                     >
                       <FiX className="w-3.5 h-3.5" />
                     </button>
@@ -816,14 +854,14 @@ export default function AddNewCarPage() {
           <div className="flex items-center justify-between pt-4">
             <Button
               type="button"
-              className="border border-gray-800 hover:border-gray-700 bg-transparent text-muted hover:text-white px-8 h-12 rounded-xl text-xs sm:text-sm font-extrabold transition duration-200"
+              className="border border-gray-800 hover:border-gray-700 bg-transparent text-muted hover:text-text px-8 h-12 rounded-xl text-xs sm:text-sm font-extrabold transition duration-200"
             >
               Cancel
             </Button>
 
             <Button
               type="submit"
-              className="bg-[#dc2626] hover:bg-red-700 text-white px-8 h-12 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 tracking-wide shadow-lg shadow-red-950/30 transition duration-200"
+              className="bg-[#dc2626] hover:bg-red-700 text-text px-8 h-12 rounded-xl text-xs sm:text-sm font-extrabold flex items-center gap-2 tracking-wide shadow-lg shadow-primary/30 transition duration-200"
             >
               <FiSend className="w-4 h-4" />
               Publish Car
