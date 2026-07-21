@@ -20,12 +20,13 @@ export async function fetchAllCars(): Promise<ICar[]> {
   try {
     const response = await fetch(`${API_BASE_URL}/cars`);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.error(`Error fetching cars: HTTP error! status: ${response.status}`);
+      return [];
     }
     return await response.json();
   } catch (error) {
     console.error('Error fetching cars:', error);
-    throw error;
+    return [];
   }
 }
 

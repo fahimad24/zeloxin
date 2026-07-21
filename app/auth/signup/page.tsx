@@ -40,7 +40,7 @@ export default function SignUpPage() {
       name: userData.name as string, // required
       email: userData.email as string, // required
       password: userData.password as string, // required
-      callbackURL: "http://localhost:3000/callback",
+      callbackURL: "https://zelonix.vercel.app/callback",
     });
 
     if (data) {
